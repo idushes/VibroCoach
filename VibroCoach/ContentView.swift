@@ -10,7 +10,7 @@ import WatchConnectivity
 
 struct ContentView: View {
     @State private var isPressed = false
-    @State private var connectionStatus = "Tap the button to test"
+    @StateObject private var watchConnector = WatchConnector()
     
     var body: some View {
         ZStack {
@@ -65,83 +65,161 @@ struct ContentView: View {
                             isPressed = false
                         }
                 )
+                .disabled(!watchConnector.isReady)
+                .opacity(watchConnector.isReady ? 1.0 : 0.6)
                 
                 Spacer()
                 
                 // Статус
-                Text(connectionStatus)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
+                VStack(spacing: 8) {
+                    Text(watchConnector.connectionStatus)
+                        .font(.caption)
+                        .foregroundColor(watchConnector.isReady ? .secondary : .red)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                    
+                    if !watchConnector.isReady {
+                        Button("Reconnect") {
+                            watchConnector.reconnect()
+                        }
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                    }
+                }
             }
             .padding()
-        }
-        .onAppear {
-            setupWatchConnection()
         }
     }
     
     private func buttonPressed() {
-        connectionStatus = "Button pressed! Setting up watch connection..."
-        
-        // Добавляем небольшую задержку для демонстрации
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            sendVibrateCommand()
-        }
-    }
-    
-    private func setupWatchConnection() {
-        if WCSession.isSupported() {
-            let session = WCSession.default
-            session.delegate = WatchConnector.shared
-            session.activate()
-            connectionStatus = "Setting up Apple Watch connection..."
-        } else {
-            connectionStatus = "WatchConnectivity not supported on this device"
-        }
-    }
-    
-    private func sendVibrateCommand() {
-        guard WCSession.default.isReachable else {
-            connectionStatus = "Apple Watch not reachable"
-            return
-        }
-        
-        let message = ["action": "vibrate"]
-        WCSession.default.sendMessage(message, replyHandler: { response in
-            DispatchQueue.main.async {
-                self.connectionStatus = "Vibration command sent ✓"
-            }
-        }) { error in
-            DispatchQueue.main.async {
-                self.connectionStatus = "Error: \(error.localizedDescription)"
-            }
-        }
+        watchConnector.sendVibrateCommand()
     }
 }
 
 class WatchConnector: NSObject, ObservableObject, WCSessionDelegate {
-    static let shared = WatchConnector()
+    @Published var connectionStatus = "Connecting to Apple Watch..."
+    @Published var isReady = false
     
-    private override init() {
+    private var session: WCSession?
+    
+    override init() {
         super.init()
+        setupWatchConnectivity()
+    }
+    
+    private func setupWatchConnectivity() {
+        guard WCSession.isSupported() else {
+            connectionStatus = "WatchConnectivity not supported"
+            return
+        }
+        
+        session = WCSession.default
+        session?.delegate = self
+        session?.activate()
+    }
+    
+    func reconnect() {
+        connectionStatus = "Reconnecting..."
+        isReady = false
+        
+        // Деактивируем текущую сессию если она есть
+        if let session = session {
+            session.delegate = nil
+        }
+        
+        // Создаем новую сессию
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.setupWatchConnectivity()
+        }
+    }
+    
+    func sendVibrateCommand() {
+        guard let session = session, session.isReachable else {
+            connectionStatus = "Apple Watch not reachable"
+            isReady = false
+            return
+        }
+        
+        connectionStatus = "Sending vibration command..."
+        
+        let message = ["action": "vibrate", "timestamp": Date().timeIntervalSince1970]
+        
+        session.sendMessage(message, replyHandler: { [weak self] response in
+            DispatchQueue.main.async {
+                self?.connectionStatus = "Vibration sent ✓"
+                // Сбрасываем статус через 2 секунды
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                    self?.updateConnectionStatus()
+                }
+            }
+        }) { [weak self] error in
+            DispatchQueue.main.async {
+                self?.connectionStatus = "Error: \(error.localizedDescription)"
+                self?.isReady = false
+                
+                // Пытаемся переподключиться через 3 секунды
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                    self?.reconnect()
+                }
+            }
+        }
+    }
+    
+    private func updateConnectionStatus() {
+        guard let session = session else { return }
+        
+        if session.isReachable {
+            connectionStatus = session.isWatchAppInstalled ? "Apple Watch ready ✓" : "Install app on Apple Watch"
+            isReady = session.isWatchAppInstalled
+        } else {
+            connectionStatus = "Apple Watch not reachable"
+            isReady = false
+        }
     }
     
     // MARK: - WCSessionDelegate
     
     func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
         DispatchQueue.main.async {
-            // Можно добавить логику обновления UI здесь
+            switch activationState {
+            case .activated:
+                self.updateConnectionStatus()
+            case .inactive:
+                self.connectionStatus = "Session inactive"
+                self.isReady = false
+            case .notActivated:
+                self.connectionStatus = "Session not activated"
+                self.isReady = false
+            @unknown default:
+                self.connectionStatus = "Unknown state"
+                self.isReady = false
+            }
         }
     }
     
     func sessionDidBecomeInactive(_ session: WCSession) {
-        // Handle session becoming inactive
+        DispatchQueue.main.async {
+            self.connectionStatus = "Session became inactive"
+            self.isReady = false
+        }
     }
     
     func sessionDidDeactivate(_ session: WCSession) {
-        // Handle session deactivation
+        DispatchQueue.main.async {
+            self.connectionStatus = "Session deactivated"
+            self.isReady = false
+        }
+        
+        // Автоматически переподключаемся
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.setupWatchConnectivity()
+        }
+    }
+    
+    func sessionReachabilityDidChange(_ session: WCSession) {
+        DispatchQueue.main.async {
+            self.updateConnectionStatus()
+        }
     }
 }
 

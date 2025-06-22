@@ -30,13 +30,19 @@ struct ContentView: View {
                 .padding()
             
             if watchManager.lastVibrateTime != nil {
-                Text("Last vibration:")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                
-                Text(watchManager.formattedLastVibrateTime)
-                    .font(.caption2)
-                    .foregroundColor(.blue)
+                VStack(spacing: 4) {
+                    Text("Last vibration:")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    
+                    Text(watchManager.formattedLastVibrateTime)
+                        .font(.caption2)
+                        .foregroundColor(.blue)
+                    
+                    Text("Count: \(watchManager.vibrationCount)")
+                        .font(.caption2)
+                        .foregroundColor(.green)
+                }
             }
         }
         .padding()
@@ -46,6 +52,9 @@ struct ContentView: View {
 class WatchManager: NSObject, ObservableObject, WCSessionDelegate {
     @Published var statusMessage = "Waiting for connection..."
     @Published var lastVibrateTime: Date?
+    @Published var vibrationCount = 0
+    
+    private var session: WCSession?
     
     var formattedLastVibrateTime: String {
         guard let lastVibrateTime = lastVibrateTime else { return "" }
@@ -60,13 +69,14 @@ class WatchManager: NSObject, ObservableObject, WCSessionDelegate {
     }
     
     private func setupWatchConnectivity() {
-        if WCSession.isSupported() {
-            let session = WCSession.default
-            session.delegate = self
-            session.activate()
-        } else {
+        guard WCSession.isSupported() else {
             statusMessage = "WatchConnectivity not supported"
+            return
         }
+        
+        session = WCSession.default
+        session?.delegate = self
+        session?.activate()
     }
     
     private func performVibration() {
@@ -75,12 +85,13 @@ class WatchManager: NSObject, ObservableObject, WCSessionDelegate {
         
         DispatchQueue.main.async {
             self.lastVibrateTime = Date()
-            self.statusMessage = "Vibration performed ✓"
+            self.vibrationCount += 1
+            self.statusMessage = "Vibration performed ✓ (\(self.vibrationCount))"
         }
         
-        // Сбрасываем статус через 2 секунды
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            self.statusMessage = "Ready"
+        // Сбрасываем статус через 3 секунды
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            self.statusMessage = "Ready for next vibration"
         }
     }
     
@@ -90,7 +101,7 @@ class WatchManager: NSObject, ObservableObject, WCSessionDelegate {
         DispatchQueue.main.async {
             switch activationState {
             case .activated:
-                self.statusMessage = "Ready"
+                self.statusMessage = "Connected - Ready"
             case .inactive:
                 self.statusMessage = "Session inactive"
             case .notActivated:
@@ -102,11 +113,30 @@ class WatchManager: NSObject, ObservableObject, WCSessionDelegate {
     }
     
     func session(_ session: WCSession, didReceiveMessage message: [String : Any], replyHandler: @escaping ([String : Any]) -> Void) {
+        print("Watch received message: \(message)")
+        
         if let action = message["action"] as? String, action == "vibrate" {
             performVibration()
-            replyHandler(["status": "success"])
+            
+            // Отправляем подтверждение с дополнительной информацией
+            let response: [String: Any] = [
+                "status": "success",
+                "timestamp": Date().timeIntervalSince1970,
+                "vibrationCount": vibrationCount
+            ]
+            replyHandler(response)
         } else {
             replyHandler(["status": "unknown_action"])
+        }
+    }
+    
+    func sessionReachabilityDidChange(_ session: WCSession) {
+        DispatchQueue.main.async {
+            if session.isReachable {
+                self.statusMessage = "iPhone connected"
+            } else {
+                self.statusMessage = "iPhone disconnected"
+            }
         }
     }
 }
