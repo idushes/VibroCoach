@@ -134,8 +134,8 @@ class WatchConnector: NSObject, ObservableObject, WCSessionDelegate {
     }
     
     func sendVibrateCommand() {
-        guard let session = session, session.isReachable else {
-            connectionStatus = "Apple Watch not reachable"
+        guard let session = session, session.activationState == .activated else {
+            connectionStatus = "Session not ready"
             isReady = false
             return
         }
@@ -144,23 +144,42 @@ class WatchConnector: NSObject, ObservableObject, WCSessionDelegate {
         
         let message: [String: Any] = ["action": "vibrate", "timestamp": Date().timeIntervalSince1970]
         
-        session.sendMessage(message, replyHandler: { [weak self] response in
-            DispatchQueue.main.async {
-                self?.connectionStatus = "Vibration sent ✓"
-                // Сбрасываем статус через 2 секунды
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                    self?.updateConnectionStatus()
+        // Пробуем отправить через sendMessage (для активного приложения)
+        if session.isReachable {
+            session.sendMessage(message, replyHandler: { [weak self] response in
+                DispatchQueue.main.async {
+                    self?.connectionStatus = "Vibration sent ✓"
+                    // Сбрасываем статус через 2 секунды
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                        self?.updateConnectionStatus()
+                    }
+                }
+            }) { [weak self] error in
+                DispatchQueue.main.async {
+                    // Если sendMessage не сработал, пробуем transferUserInfo
+                    self?.sendViaTransferUserInfo(message: message)
                 }
             }
-        }) { [weak self] error in
-            DispatchQueue.main.async {
-                self?.connectionStatus = "Error: \(error.localizedDescription)"
-                self?.isReady = false
-                
-                // Пытаемся переподключиться через 3 секунды
-                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                    self?.reconnect()
-                }
+        } else {
+            // Если часы не достижимы, используем transferUserInfo
+            sendViaTransferUserInfo(message: message)
+        }
+    }
+    
+    private func sendViaTransferUserInfo(message: [String: Any]) {
+        guard let session = session else { return }
+        
+        connectionStatus = "Sending to background app..."
+        
+        // transferUserInfo доставляет сообщения даже когда приложение в фоне
+        session.transferUserInfo(message)
+        
+        // Показываем статус отправки
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.connectionStatus = "Command queued for delivery ✓"
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                self.updateConnectionStatus()
             }
         }
     }
@@ -168,11 +187,21 @@ class WatchConnector: NSObject, ObservableObject, WCSessionDelegate {
     private func updateConnectionStatus() {
         guard let session = session else { return }
         
-        if session.isReachable {
-            connectionStatus = session.isWatchAppInstalled ? "Apple Watch ready ✓" : "Install app on Apple Watch"
-            isReady = session.isWatchAppInstalled
+        if session.activationState == .activated {
+            if session.isWatchAppInstalled {
+                if session.isReachable {
+                    connectionStatus = "Apple Watch ready ✓ (Active)"
+                    isReady = true
+                } else {
+                    connectionStatus = "Apple Watch ready ✓ (Background)"
+                    isReady = true
+                }
+            } else {
+                connectionStatus = "Install app on Apple Watch"
+                isReady = false
+            }
         } else {
-            connectionStatus = "Apple Watch not reachable"
+            connectionStatus = "Apple Watch not connected"
             isReady = false
         }
     }

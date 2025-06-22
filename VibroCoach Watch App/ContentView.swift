@@ -112,8 +112,9 @@ class WatchManager: NSObject, ObservableObject, WCSessionDelegate {
         }
     }
     
+    // Для активного приложения (немедленная доставка)
     func session(_ session: WCSession, didReceiveMessage message: [String : Any], replyHandler: @escaping ([String : Any]) -> Void) {
-        print("Watch received message: \(message)")
+        print("Watch received immediate message: \(message)")
         
         if let action = message["action"] as? String, action == "vibrate" {
             performVibration()
@@ -122,11 +123,30 @@ class WatchManager: NSObject, ObservableObject, WCSessionDelegate {
             let response: [String: Any] = [
                 "status": "success",
                 "timestamp": Date().timeIntervalSince1970,
-                "vibrationCount": vibrationCount
+                "vibrationCount": vibrationCount,
+                "delivery": "immediate"
             ]
             replyHandler(response)
         } else {
             replyHandler(["status": "unknown_action"])
+        }
+    }
+    
+    // Для фонового режима (надежная доставка)
+    func session(_ session: WCSession, didReceiveUserInfo userInfo: [String : Any]) {
+        print("Watch received background message: \(userInfo)")
+        
+        if let action = userInfo["action"] as? String, action == "vibrate" {
+            DispatchQueue.main.async {
+                self.performVibration()
+                
+                // Обновляем статус для фонового сообщения
+                self.statusMessage = "Background vibration ✓ (\(self.vibrationCount))"
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                    self.statusMessage = "Ready for next vibration"
+                }
+            }
         }
     }
     
