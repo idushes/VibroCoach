@@ -7,6 +7,7 @@
 
 import SwiftUI
 import WatchConnectivity
+import HealthKit
 
 struct ContentView: View {
     @State private var isPressed = false
@@ -78,6 +79,12 @@ struct ContentView: View {
                         .multilineTextAlignment(.center)
                         .padding(.horizontal)
                     
+                    Text(watchConnector.healthKitStatus)
+                        .font(.caption2)
+                        .foregroundColor(.blue)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                    
                     if !watchConnector.isReady {
                         Button("Reconnect") {
                             watchConnector.reconnect()
@@ -89,6 +96,9 @@ struct ContentView: View {
             }
             .padding()
         }
+        .onAppear {
+            watchConnector.requestHealthKitPermissions()
+        }
     }
     
     private func buttonPressed() {
@@ -98,13 +108,39 @@ struct ContentView: View {
 
 class WatchConnector: NSObject, ObservableObject, WCSessionDelegate {
     @Published var connectionStatus = "Connecting to Apple Watch..."
+    @Published var healthKitStatus = "Requesting HealthKit permissions..."
     @Published var isReady = false
     
     private var session: WCSession?
+    private let healthStore = HKHealthStore()
     
     override init() {
         super.init()
         setupWatchConnectivity()
+    }
+    
+    func requestHealthKitPermissions() {
+        guard HKHealthStore.isHealthDataAvailable() else {
+            healthKitStatus = "HealthKit not available"
+            return
+        }
+        
+        // Запрашиваем разрешения для workout-сессий
+        let workoutType = HKObjectType.workoutType()
+        let heartRateType = HKObjectType.quantityType(forIdentifier: .heartRate)!
+        
+        let typesToRead: Set<HKObjectType> = [workoutType, heartRateType]
+        let typesToShare: Set<HKSampleType> = [workoutType]
+        
+        healthStore.requestAuthorization(toShare: typesToShare, read: typesToRead) { [weak self] success, error in
+            DispatchQueue.main.async {
+                if success {
+                    self?.healthKitStatus = "HealthKit permissions granted ✓"
+                } else {
+                    self?.healthKitStatus = "HealthKit permissions denied"
+                }
+            }
+        }
     }
     
     private func setupWatchConnectivity() {
@@ -142,7 +178,11 @@ class WatchConnector: NSObject, ObservableObject, WCSessionDelegate {
         
         connectionStatus = "Sending vibration command..."
         
-        let message: [String: Any] = ["action": "vibrate", "timestamp": Date().timeIntervalSince1970]
+        let message: [String: Any] = [
+            "action": "vibrate",
+            "timestamp": Date().timeIntervalSince1970,
+            "healthKitEnabled": true
+        ]
         
         // Пробуем отправить через sendMessage (для активного приложения)
         if session.isReachable {
