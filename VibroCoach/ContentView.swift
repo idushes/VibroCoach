@@ -142,7 +142,7 @@ class WatchConnector: NSObject, ObservableObject, WCSessionDelegate {
         
         connectionStatus = "Sending vibration command..."
         
-        let message = ["action": "vibrate", "timestamp": Date().timeIntervalSince1970]
+        let message: [String: Any] = ["action": "vibrate", "timestamp": Date().timeIntervalSince1970]
         
         session.sendMessage(message, replyHandler: { [weak self] response in
             DispatchQueue.main.async {
