@@ -47,6 +47,13 @@
 			);
 			target = 2EB816522E07C4DB00010304 /* VibroCoach */;
 		};
+		2E6289062E07FFA600B06380 /* Exceptions for "VibroCoach Watch App" folder in "VibroCoach Watch App" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"VibroCoach-Watch-App-Info.plist",
+			);
+			target = 2EB8165F2E07C4DC00010304 /* VibroCoach Watch App */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -60,6 +67,9 @@
 		};
 		2EB816642E07C4DC00010304 /* VibroCoach Watch App */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				2E6289062E07FFA600B06380 /* Exceptions for "VibroCoach Watch App" folder in "VibroCoach Watch App" target */,
+			);
 			path = "VibroCoach Watch App";
 			sourceTree = "<group>";
 		};
@@ -352,12 +362,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "VibroCoach Watch App/VibroCoach Watch App.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = 78BW3MAATB;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "VibroCoach-Watch-App-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = VibroCoach;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "This app uses Health data to manage workout sessions.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "This app updates workout data to provide accurate coaching.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.lisacorp.vibrocoach;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -381,12 +395,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "VibroCoach Watch App/VibroCoach Watch App.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = 78BW3MAATB;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "VibroCoach-Watch-App-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = VibroCoach;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "This app uses Health data to manage workout sessions.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "This app updates workout data to provide accurate coaching.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.lisacorp.vibrocoach;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -411,6 +429,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = VibroCoach/VibroCoach.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = 78BW3MAATB;
@@ -420,6 +439,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = VibroCoach;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.sports";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "This app uses Health data to manage workout sessions.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "This app updates workout data to provide accurate coaching.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -445,6 +466,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = VibroCoach/VibroCoach.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = 78BW3MAATB;
@@ -454,6 +476,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = VibroCoach;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.sports";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "This app uses Health data to manage workout sessions.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "This app updates workout data to provide accurate coaching.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
