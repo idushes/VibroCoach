@@ -39,9 +39,22 @@
 		2EB816602E07C4DC00010304 /* VibroCoach Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "VibroCoach Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		2E6289022E07F66200B06380 /* Exceptions for "VibroCoach" folder in "VibroCoach" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 2EB816522E07C4DB00010304 /* VibroCoach */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		2EB816552E07C4DB00010304 /* VibroCoach */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				2E6289022E07F66200B06380 /* Exceptions for "VibroCoach" folder in "VibroCoach" target */,
+			);
 			path = VibroCoach;
 			sourceTree = "<group>";
 		};
@@ -403,7 +416,9 @@
 				DEVELOPMENT_TEAM = 78BW3MAATB;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = VibroCoach/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = VibroCoach;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -434,7 +449,9 @@
 				DEVELOPMENT_TEAM = 78BW3MAATB;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = VibroCoach/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = VibroCoach;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
